@@ -479,8 +479,6 @@ raw %&gt;%
 <pre class="r"><code># Separating your data processing into different code chunks can be useful. Once
 # you have read the data in once, you don&#39;t want to do it 50 more times.
 
-# In order to get this code to wor 
-
 x &lt;- raw %&gt;% 
   mutate(death_date = ymd(paste(dyear, dmonth, &quot;01&quot;, sep = &quot;-&quot;))) %&gt;% 
   select(death_date, death_age)
@@ -514,6 +512,41 @@ sc2_p</code></pre>
 <p>Hint: Always work with small data first! Get that working and then use big data.</p>
 <p>Hint: If you <code>group_by()</code> first, things go faster since you don’t want to manipulate 5 million rows unless you have to.</p>
 <p>Although you can go back and grab <code>dmonth</code>, you don’t need to! You can work just with <code>x</code> and figure out the month by using the <code>month()</code> function.</p>
+<pre class="r"><code>z3 &lt;- x %&gt;% 
+  group_by(death_date) %&gt;% 
+  summarize(total = n(),
+            avg_age = mean(death_age)) %&gt;% 
+  mutate(season = ifelse(month(death_date) %in% c(10, 11, 12, 1, 2, 3), &quot;Cold&quot;, &quot;Warm&quot;)) %&gt;% 
+  mutate(season = parse_factor(season, levels = c(&quot;Cold&quot;, &quot;Warm&quot;)))
+
+# Instead of making the plot with all the days that you have, make it for just a
+# few dates, at least until you get things working. Remember that animations
+# scale by the number of things being animated, which is the number of days in
+# this case.
+
+# filter(death_date &gt; as.Date(&quot;2005-12-15&quot;)) %&gt;% 
+
+# I tried to get transition_states() and shadow_mark() to work
+
+  
+sc3_p &lt;- z3 %&gt;% 
+  ggplot(aes(y = total, x = death_date, color = season)) +
+    geom_point() +
+    geom_line() +
+    labs(x = &quot;Date of Death&quot;,
+         y = &quot;Total&quot;,
+         title = &quot;Total Deaths Over Time&quot;,
+         subtitle = &quot;More deaths during cold weather&quot;,
+         caption = &quot;1940 US Census Mortality Data from CenSoc&quot;) +
+    theme_minimal() +
+    theme(panel.grid = element_blank(),
+          panel.grid.major.y = element_line(color = &quot;white&quot;),
+          panel.ontop = TRUE) +
+    scale_fill_discrete(guide = guide_legend(&quot;Season&quot;)) +
+    transition_reveal(death_date)
+
+
+# anim_save(&quot;sc3.gif&quot;, sc3_p)</code></pre>
 </div>
 <div id="challenge-problem" class="section level2">
 <h2>Challenge Problem</h2>

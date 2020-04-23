@@ -106,8 +106,6 @@ Don't try to get this working on the whole data set at once. That takes forever.
 # Separating your data processing into different code chunks can be useful. Once
 # you have read the data in once, you don't want to do it 50 more times.
 
-# In order to get this code to wor 
-
 x <- raw %>% 
   mutate(death_date = ymd(paste(dyear, dmonth, "01", sep = "-"))) %>% 
   select(death_date, death_age)
@@ -152,7 +150,43 @@ Hint: If you `group_by()` first, things go faster since you don't want to manipu
 
 Although you can go back and grab `dmonth`, you don't need to! You can work just with `x` and figure out the month by using the `month()` function.
 
+```{r sc3, cache=TRUE}
+z3 <- x %>% 
+  group_by(death_date) %>% 
+  summarize(total = n(),
+            avg_age = mean(death_age)) %>% 
+  mutate(season = ifelse(month(death_date) %in% c(10, 11, 12, 1, 2, 3), "Cold", "Warm")) %>% 
+  mutate(season = parse_factor(season, levels = c("Cold", "Warm")))
 
+# Instead of making the plot with all the days that you have, make it for just a
+# few dates, at least until you get things working. Remember that animations
+# scale by the number of things being animated, which is the number of days in
+# this case.
+
+# filter(death_date > as.Date("2005-12-15")) %>% 
+
+# I tried to get transition_states() and shadow_mark() to work
+
+  
+sc3_p <- z3 %>% 
+  ggplot(aes(y = total, x = death_date, color = season)) +
+    geom_point() +
+    geom_line() +
+    labs(x = "Date of Death",
+         y = "Total",
+         title = "Total Deaths Over Time",
+         subtitle = "More deaths during cold weather",
+         caption = "1940 US Census Mortality Data from CenSoc") +
+    theme_minimal() +
+    theme(panel.grid = element_blank(),
+          panel.grid.major.y = element_line(color = "white"),
+          panel.ontop = TRUE) +
+    scale_fill_discrete(guide = guide_legend("Season")) +
+    transition_reveal(death_date)
+
+
+# anim_save("sc3.gif", sc3_p)
+```
 
 ## Challenge Problem
 
